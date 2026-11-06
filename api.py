@@ -10,10 +10,10 @@ from queue import Queue, Empty
 from threading import Thread
 from decimal import Decimal
 from fastapi import FastAPI, Request, Response, HTTPException, UploadFile, File
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv, set_key
-from service import history, process
+from service import history, process, connect, StorageUnavailable
 from rules import records, normalize, RULE_VERSION
 
 ROOT = Path(__file__).parent
@@ -42,7 +42,7 @@ async def protect(request, call_next):
         allowed = os.getenv('APP_ORIGIN') or os.getenv('RENDER_EXTERNAL_URL') or 'http://127.0.0.1:3000'
         if request.headers.get('origin') not in {allowed, 'http://localhost:3000'}:
             return Response('Request origin not allowed', status_code=403)
-    public = request.url.path in ('/api/login', '/api/health') or (request.url.path == '/api/config' and request.method == 'GET')
+    public = request.url.path in ('/api/login', '/api/health', '/api/ready') or (request.url.path == '/api/config' and request.method == 'GET')
     if request.url.path.startswith('/api/') and os.getenv('APP_PASSWORD') and not public:
         state = sessions.get(request.cookies.get(COOKIE), {})
         if not state.get('authenticated'):
@@ -55,6 +55,22 @@ async def protect(request, call_next):
 @app.get('/api/health')
 def health():
     return {'status': 'ok'}
+
+
+@app.exception_handler(StorageUnavailable)
+async def storage_unavailable(request: Request, error: StorageUnavailable):
+    return JSONResponse(status_code=503, content={
+        'detail': 'Database unavailable. History and PO balances cannot be verified. No approval can be confirmed until storage is restored.',
+        'code': error.code,
+    }, headers={'Retry-After': '30'})
+
+
+@app.get('/api/ready')
+def ready():
+    """Unlike liveness, readiness verifies the configured database and schema."""
+    with connect(database()) as db:
+        db.execute('SELECT 1')
+    return {'status': 'ready', 'database': 'ok'}
 
 
 class Login(BaseModel):

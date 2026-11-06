@@ -1,5 +1,6 @@
 import json
 import sys
+import pytest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1]))
 from fastapi.testclient import TestClient
@@ -61,3 +62,43 @@ def test_password_gate(monkeypatch):
         assert client.post('/api/login', json={'password': 'wrong'}, headers=ORIGIN).status_code == 401
         assert client.post('/api/login', json={'password': 'demo-test-password'}, headers=ORIGIN).status_code == 200
         assert client.get('/api/config').json()['login_required'] is False
+
+
+def test_readiness_checks_real_local_storage(tmp_path, monkeypatch):
+    monkeypatch.delenv('DATABASE_URL', raising=False)
+    monkeypatch.setenv('DATABASE_PATH', str(tmp_path / 'ready.sqlite3'))
+    with TestClient(api.app) as client:
+        assert client.get('/api/ready').json() == {'status': 'ready', 'database': 'ok'}
+    assert (tmp_path / 'ready.sqlite3').exists()
+
+
+@pytest.mark.parametrize('route', ['/api/ready', '/api/runs', '/api/orders'])
+def test_database_authentication_failure_is_safe_503(route, monkeypatch):
+    import psycopg
+    secret = 'synthetic-database-password-must-stay-private'
+    monkeypatch.delenv('APP_PASSWORD', raising=False)
+    monkeypatch.setenv('DATABASE_URL', f'postgresql://test:{secret}@example.invalid/test')
+    def fail(*args, **kwargs):
+        raise psycopg.OperationalError('password authentication failed: ' + secret)
+    monkeypatch.setattr(psycopg, 'connect', fail)
+    with TestClient(api.app) as client:
+        response = client.get(route)
+        assert response.status_code == 503
+        assert response.json()['code'] == 'database_authentication_failed'
+        assert response.headers['retry-after'] == '30'
+        assert secret not in response.text
+        assert 'postgresql://' not in response.text
+        # A running process alone does not establish database readiness.
+        assert client.get('/api/health').status_code == 200
+
+
+def test_database_network_failure_is_not_reported_as_authentication(monkeypatch):
+    import psycopg
+    monkeypatch.setenv('DATABASE_URL', 'postgresql://test:synthetic-secret@example.invalid/test')
+    def fail(*args, **kwargs):
+        raise psycopg.OperationalError('connection timed out')
+    monkeypatch.setattr(psycopg, 'connect', fail)
+    with TestClient(api.app) as client:
+        response = client.get('/api/ready')
+        assert response.status_code == 503
+        assert response.json()['code'] == 'database_unavailable'

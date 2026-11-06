@@ -11,14 +11,25 @@ from extraction import extract, inspect_pdf, PROMPT_VERSION
 from rules import validate, RULE_VERSION
 
 
+class StorageUnavailable(Exception):
+    """Safe deployment diagnostic; never include a DSN or provider error text."""
+    def __init__(self, code="database_unavailable"):
+        self.code = code
+        super().__init__(code)
+
+
 class PostgresHistory:
     """Same narrow history interface; deployed rows outlive the web container."""
     def __init__(self, url):
         import psycopg
         self.db = psycopg.connect(url, connect_timeout=10, options='-c statement_timeout=30000')
-        self.db.execute('SELECT pg_advisory_xact_lock(73451021)')
-        self.db.execute('CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, created TEXT NOT NULL, payload TEXT NOT NULL, seq BIGSERIAL UNIQUE)')
-        self.db.commit()
+        try:
+            self.db.execute('SELECT pg_advisory_xact_lock(73451021)')
+            self.db.execute('CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, created TEXT NOT NULL, payload TEXT NOT NULL, seq BIGSERIAL UNIQUE)')
+            self.db.commit()
+        except Exception:
+            self.db.close()
+            raise
 
     def execute(self, sql, params=()):
         if sql == 'BEGIN IMMEDIATE':
@@ -38,7 +49,13 @@ class PostgresHistory:
 
 def connect(path):
     if os.getenv('DATABASE_URL'):
-        return PostgresHistory(os.environ['DATABASE_URL'])
+        import psycopg
+        try:
+            return PostgresHistory(os.environ['DATABASE_URL'])
+        except psycopg.Error as error:
+            # Provider messages may contain credentials. Only expose a fixed code.
+            auth_failed = (error.sqlstate or '').startswith('28') or 'password authentication failed' in str(error).lower()
+            raise StorageUnavailable('database_authentication_failed' if auth_failed else 'database_unavailable') from None
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     db = sqlite3.connect(path, timeout=30)
     # First-time initialization can race before either connection establishes WAL.

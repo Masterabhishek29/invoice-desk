@@ -12,6 +12,14 @@ Free Render erases local files on restart and sleeps after inactivity. Therefore
 
 Backend session keys reset on restart; run history in Postgres does not. Postgres uses a transaction advisory lock around balance validation and reservation. SQLite keeps its `BEGIN IMMEDIATE` behavior locally. The real Postgres connection/concurrency test is required once provisioned; local fixture tests alone do not prove deployed persistence.
 
+## Database troubleshooting
+
+`/api/health` checks that the Python process is running. Check `/api/ready` separately before recording or submission: it must return HTTP 200 with `database: ok`. It connects to the configured database and initializes/verifies the history schema. It does not call Gemini.
+
+Database connection failures return HTTP 503 with a fixed, credential-free code. `database_authentication_failed` means the database rejected its credentials; changing Python rules cannot repair that secret. In Neon, select the intended project, production branch, database and role, then use the connection dialog's **Copy** control to copy the actual full connection URI into Render's private `DATABASE_URL`. Never copy masked asterisks, a screenshot, wrapped page text, or a shell command such as `psql '...'`. Preserve the URI's encoding and SSL parameters. Save the environment change and redeploy the existing Render service to retain its URL. Do not commit the URI or paste it into chat.
+
+For `database_unavailable`, inspect the private provider logs and verify the project/endpoint is active and reachable. Do not fall back to local SQLite on ephemeral cloud storage. Once readiness succeeds, verify `/api/runs` and `/api/orders`, a real invoice, an edge case, and history after a restart. A successful readiness check does not verify Gemini extraction or persistent balances by itself.
+
 Before submission, resolve the currently failing Gemini extraction and verify real invoices end to end. The public source repository and a deployed UI are not by themselves evidence that invoice extraction works.
 
 Official pricing/limitations checked November 7, 2026: https://render.com/docs/free and https://neon.com/pricing.

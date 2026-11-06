@@ -1,5 +1,6 @@
 # Verification status
 
+- November 7 deployment diagnostics update: 21 Python tests pass. Added database readiness (`/api/ready`), sanitized HTTP 503 responses for Postgres connection failures, and tests that credentials never appear in those responses. These tests simulate provider failures; they do not establish a repaired Neon connection. The last live checks returned 500 for history and purchase orders before this update. Live readiness, Gemini success, and restart persistence remain pending.
 - Sixteen Python tests passed, including duplicate detection, cumulative and line limits, ambiguity, concurrency, API streaming, key isolation, origin and password protection. HTTP processing tests use explicit extraction fixtures.
 - Next.js 16.4.5 production build passed. Browser verified dashboard, connection settings, multiple-line PO register and workspace. Full browser upload/extraction success is not yet verified. Streamlit UI has been removed.
 - Clean invoice, clear image-only scan and unclear image-only scan were rendered and visually inspected.
