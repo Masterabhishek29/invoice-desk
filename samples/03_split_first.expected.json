@@ -1,0 +1,31 @@
+{
+  "vendor_name": "Cedar IT Services",
+  "invoice_number": "CD-001",
+  "invoice_date": "2026-11-01",
+  "po_reference": "PO-2001",
+  "currency": "USD",
+  "subtotal": "600.00",
+  "tax": "0.00",
+  "total": "600.00",
+  "quality": "clear",
+  "uncertainties": [],
+  "evidence": {
+    "vendor_name": "Page 1: Cedar IT Services",
+    "invoice_number": "Page 1: CD-001",
+    "invoice_date": "Page 1: 2026-11-01",
+    "po_reference": "Page 1: PO-2001",
+    "currency": "Page 1: USD",
+    "subtotal": "Page 1: 600.00",
+    "tax": "Page 1: 0.00",
+    "total": "Page 1: 600.00"
+  },
+  "line_items": [
+    {
+      "description": "IT support services",
+      "quantity": "1",
+      "unit_price": "600.00",
+      "amount": "600.00",
+      "evidence": "Page 1: 1 x 600.00 = 600.00"
+    }
+  ]
+}

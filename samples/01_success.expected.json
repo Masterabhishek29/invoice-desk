@@ -1,0 +1,31 @@
+{
+  "vendor_name": "Northstar Office Supplies",
+  "invoice_number": "NS-001",
+  "invoice_date": "2026-11-01",
+  "po_reference": "PO-1001",
+  "currency": "USD",
+  "subtotal": "500.00",
+  "tax": "50.00",
+  "total": "550.00",
+  "quality": "clear",
+  "uncertainties": [],
+  "evidence": {
+    "vendor_name": "Page 1: Northstar Office Supplies",
+    "invoice_number": "Page 1: NS-001",
+    "invoice_date": "Page 1: 2026-11-01",
+    "po_reference": "Page 1: PO-1001",
+    "currency": "Page 1: USD",
+    "subtotal": "Page 1: 500.00",
+    "tax": "Page 1: 50.00",
+    "total": "Page 1: 550.00"
+  },
+  "line_items": [
+    {
+      "description": "Office supplies",
+      "quantity": "1",
+      "unit_price": "500.00",
+      "amount": "500.00",
+      "evidence": "Page 1: 1 x 500.00 = 500.00"
+    }
+  ]
+}
