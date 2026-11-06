@@ -1,0 +1,19 @@
+services:
+  api:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_PATH: /data/history.sqlite3
+      LOCAL_SETUP: '0'
+    volumes:
+      - invoice_history:/data
+    restart: unless-stopped
+  web:
+    build: ./web
+    ports:
+      - '3000:3000'
+    depends_on:
+      - api
+    restart: unless-stopped
+volumes:
+  invoice_history:

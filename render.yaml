@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: invoice-desk
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.render
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
+      - key: APP_PASSWORD
+        sync: false
+      - key: COOKIE_SECURE
+        value: '1'
+      - key: LOCAL_SETUP
+        value: '0'
