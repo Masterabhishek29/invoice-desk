@@ -1,0 +1,4 @@
+po_reference,vendor_id,currency,limit,previously_invoiced,status
+PO-1001,V001,USD,2000.00,0.00,open
+PO-2001,V002,USD,1000.00,100.00,open
+PO-3001,V001,USD,500.00,0.00,open
