@@ -22,8 +22,10 @@ class PostgresHistory:
     """Same narrow history interface; deployed rows outlive the web container."""
     def __init__(self, url):
         import psycopg
-        self.db = psycopg.connect(url, connect_timeout=10, options='-c statement_timeout=30000')
+        # PgBouncer rejects statement_timeout in the connection startup packet.
+        self.db = psycopg.connect(url, connect_timeout=10)
         try:
+            self.db.execute("SET LOCAL statement_timeout = '30s'")
             self.db.execute('SELECT pg_advisory_xact_lock(73451021)')
             self.db.execute('CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, created TEXT NOT NULL, payload TEXT NOT NULL, seq BIGSERIAL UNIQUE)')
             self.db.commit()
@@ -32,6 +34,10 @@ class PostgresHistory:
             raise
 
     def execute(self, sql, params=()):
+        from psycopg.pq import TransactionStatus
+        if self.db.info.transaction_status == TransactionStatus.IDLE:
+            # LOCAL stays within this transaction, including pooled connections.
+            self.db.execute("SET LOCAL statement_timeout = '30s'")
         if sql == 'BEGIN IMMEDIATE':
             # Serialize balance validation + reservation across backend processes.
             return self.db.execute('SELECT pg_advisory_xact_lock(73451022)')

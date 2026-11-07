@@ -14,6 +14,8 @@ Backend session keys reset on restart; run history in Postgres does not. Postgre
 
 ## Database troubleshooting
 
+The Neon pooler rejects `statement_timeout` inside connection startup `options`. The backend sets it with `SET LOCAL` at the start of each transaction instead. Keep the pooled application URL; do not add `options=-c statement_timeout=...` to it. See https://neon.com/docs/connect/connection-errors#unsupported-startup-parameter.
+
 `/api/health` checks that the Python process is running. Check `/api/ready` separately before recording or submission: it must return HTTP 200 with `database: ok`. It connects to the configured database and initializes/verifies the history schema. It does not call Gemini.
 
 Database connection failures return HTTP 503 with a fixed, credential-free code. `database_authentication_failed` means the database rejected its credentials; changing Python rules cannot repair that secret. In Neon, select the intended project, production branch, database and role, then use the connection dialog's **Copy** control to copy the actual full connection URI into Render's private `DATABASE_URL`. Never copy masked asterisks, a screenshot, wrapped page text, or a shell command such as `psql '...'`. Preserve the URI's encoding and SSL parameters. Save the environment change and redeploy the existing Render service to retain its URL. Do not commit the URI or paste it into chat.
