@@ -5,14 +5,15 @@
 - 23 Python tests: monetary policy, duplicates, cumulative and PO-line limits, concurrent reservations, uncertain extraction, streaming API, key isolation, origin/password checks, credential-safe storage errors, readiness, and pooled Postgres compatibility. Automated extraction tests explicitly use fixtures, not Gemini.
 - Actual public deployment: database readiness, history and PO endpoints return HTTP 200. Fixed the Neon pooler rejecting a startup timeout by using a transaction-local timeout. Existing database credentials were retained.
 - Real deployed Gemini 3.5 Flash-Lite extraction and Python validation: a digital USD 550 invoice approved; the identical renamed PDF rejected with extraction skipped; USD 600 approved against PO-2001; a following USD 400 rejected against its USD 300 remainder; unclear image-only scan routed to review; clear image-only scan approved.
-- A real local extraction using the revised readability-only prompt approved a clearly printed one-cent discrepancy within the USD 0.02 tolerance. Genuinely unclear extraction remains reviewable regardless of arithmetic tolerance.
+- Real local and deployed extraction using the revised readability-only prompt approved a fresh clearly printed one-cent discrepancy within the USD 0.02 tolerance. The deployed run preserved subtotal 100.00, tax 10.00 and total 110.01, reported clear readability, and completed in 5.19 seconds. Genuinely unclear extraction remains reviewable regardless of arithmetic tolerance.
 - The earlier Next.js production build passed. Prior browser checks covered dashboard, settings, PO register and workspace. Current live scenario verification uses the deployed HTTP API; a fresh full browser recording remains the owner's next step.
 - Publication files and fetched Git history were scanned for the known private Gemini key/demo password and credential patterns; no matches were found. Secrets remain excluded from source and archives.
 
-## Pending final release checks
+## Persistence and recording readiness
 
-- Deploy the updated extraction prompt and verify the fresh tolerance PDF against the deployed model.
-- Replace the running Render instance and verify run IDs and PO balances survive unchanged.
+The revised prompt is deployed. After replacing the running Render instance, the seven checked historical run IDs and PO balances survived unchanged. The public URL remains https://invoice-desk-6smc.onrender.com, with the optional password disabled. The required successful, duplicate, cumulative-limit, unclear-scan and tolerance scenarios have actual live results; the clear image-only scan also passed. Final verification also rechecks the latest run set after a subsequent redeploy.
+
+Record the browser demo using a fresh invoice identity. The complete UI recording is still to be performed by the owner; HTTP scenario verification does not itself constitute that recording. No real payment flow is present.
 
 ## Measured limitations
 
