@@ -4,6 +4,8 @@ ASA PS-1: **Next.js UI + Python/FastAPI backend + one Gemini model + CSV referen
 
 For a free hosted deployment with durable history, see [DEPLOYMENT.md](DEPLOYMENT.md): the optional PostgreSQL backend preserves local SQLite for development.
 
+Live demo: https://invoice-desk-6smc.onrender.com. For a recording walkthrough, see [DEMO.md](DEMO.md). Current measured results and remaining checks are recorded in [TEST-STATUS.md](TEST-STATUS.md).
+
 ## Local setup
 
 Python 3.11+, Node 20.9+ and npm. In this folder:
@@ -59,7 +61,7 @@ Duplicates use bytes plus normalized vendor/invoice number. Even prior extracted
 
 Quotes and clarity flags are model-reported and can be wrong. Missing evidence/uncertainty blocks approval, but silent hallucinations remain possible. No calibrated confidence or independent OCR check. Human review is a queue/status, not a correction editor or manual approval workflow. Provider failures save needs-review with no reservation; no raw errors/keys in history. One provider attempt per processing run.
 
-This is a **shared interview workspace**, not multi-tenant SaaS. Session keys are isolated, history is shared. One backend worker, in-memory sessions reset on restart. Public hosting needs HTTPS, workspace password and synthetic data. Future production work: proper identity/roles, session expiry/rate limiting, audited corrections, stronger vendor IDs and measured extraction accuracy.
+This is a **shared interview workspace**, not multi-tenant SaaS. Session keys are isolated, history is shared. One backend worker, in-memory sessions reset on restart. The public demo deliberately has its optional workspace password disabled; use synthetic data only. Visitors can consume a configured server key's quota without seeing the key. Remove the server Gemini key when the owner finishes recording; visitors can then supply their own session key. Database credentials remain private on the backend. Future production work: proper identity/roles, session expiry/rate limiting, audited corrections, stronger vendor IDs and measured extraction accuracy.
 
 ## Verify
 
@@ -70,7 +72,7 @@ This is a **shared interview workspace**, not multi-tenant SaaS. Session keys ar
 npm run build
 ```
 
-Sixteen backend tests pass, including streamed fixture processing, key isolation, password/origin checks, concurrency, multiple lines and ambiguity. Next.js production build passes. Browser verified overview, settings, PO register and processing workspace. Actual model extraction is **not yet verified**: previous PDF requests returned 503/ServerError. Fixtures do not establish Gemini accuracy.
+Twenty-three backend tests pass, including streamed fixture processing, key isolation, password/origin checks, concurrency, multiple lines, ambiguity, sanitized database failures, and the Neon pooler regression. The Next.js production build previously passed. Real deployed Gemini extraction has succeeded for digital and clear scanned PDFs; see [TEST-STATUS.md](TEST-STATUS.md) for current scenario results. Fixtures alone do not establish Gemini accuracy.
 
 | PDF, in order on fresh history | Expected | Reason |
 |---|---|---|
@@ -107,7 +109,7 @@ Interview: Next.js controls UX; FastAPI retains understandable Python logic. LLM
 
 ## Durable deployment
 
-Dockerfiles and `compose.yaml` run Next.js and one internal Python API. SQLite uses named `invoice_history` volume, not an ephemeral layer. No deployment has occurred.
+The live free deployment uses Render plus Neon PostgreSQL, described in [DEPLOYMENT.md](DEPLOYMENT.md). The following is an alternative local/server Docker setup: `compose.yaml` runs Next.js and one internal Python API, with SQLite on the named `invoice_history` volume.
 
 1. Choose a host that preserves volumes through redeploys. Do not assume serverless/local cloud SQLite persists.
 2. Configure host secrets / ignored `.env`: `GEMINI_API_KEY`, `GEMINI_MODEL`, strong `APP_PASSWORD`, `APP_ORIGIN=https://your-domain`, `COOKIE_SECURE=1`. Keep `LOCAL_SETUP=0`.
@@ -120,6 +122,6 @@ Local Docker uses `APP_ORIGIN=http://127.0.0.1:3000`, `COOKIE_SECURE=0`; secure 
 
 ## Model / cost reference
 
-Checked November 6, 2026: stable `gemini-3.8-flash`, PDF input and structured output, also listed by the actual key. Official sources: https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash, https://ai.google.dev/gemini-api/docs/document-processing, https://ai.google.dev/gemini-api/docs/pricing, https://aistudio.google.com/docs/get-started.
+Checked November 7, 2026: stable `gemini-3.5-flash-lite`, PDF input and structured output, listed by the configured key and successful in deployed extraction tests. It is the configurable default. Earlier `gemini-3.8-flash` requests repeatedly returned provider errors from the deployment; there is no automatic multi-model fallback. Official sources: https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite, https://ai.google.dev/gemini-api/docs/document-processing, https://ai.google.dev/gemini-api/docs/pricing.
 
-Published standard paid rates through December 31, 2026: $0.75/million input, $3.75/million output including thinking. Announced January 1, 2027 rates: $1.50/$7.50. Illustrative 3,000 input + 2,000 billable output = $0.00975/request (~$0.98/100), excluding hosting/taxes. Actual vision/thinking usage varies. Free quota and data-use terms are account/model dependent. Recheck before confidential data or billing; budget alerts are not hard spend caps. No new key creation or billing activation occurred here.
+Published standard paid rates: $0.30/million input, $2.50/million output including thinking. Illustrative 3,000 input + 2,000 billable output = $0.0059/request (~$0.59/100), excluding hosting/taxes. The model has a free tier subject to quotas. Actual vision/thinking usage varies. Free-tier data-use terms differ from the paid tier: use synthetic invoices for this public demo. No paid plan or billing activation was added.

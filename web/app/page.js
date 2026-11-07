@@ -19,7 +19,7 @@ export default function Workspace(){
   const [page,setPage]=useState('Overview'), [config,setConfig]=useState(null), [runs,setRuns]=useState([]), [records,setRecords]=useState({orders:[],vendors:[]});
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[mobile,setMobile]=useState(false),[filter,setFilter]=useState('All'),[query,setQuery]=useState('');
   const [file,setFile]=useState(null),[preview,setPreview]=useState(''),[busy,setBusy]=useState(false),[stages,setStages]=useState([]),[result,setResult]=useState(null),[selected,setSelected]=useState(null);
-  const [key,setKey]=useState(''),[model,setModel]=useState('gemini-3.8-flash'),[persist,setPersist]=useState(false),[password,setPassword]=useState('');
+  const [key,setKey]=useState(''),[model,setModel]=useState('gemini-3.5-flash-lite'),[persist,setPersist]=useState(false),[password,setPassword]=useState('');
   const input=useRef();
   async function refresh(){try{const c=await api('config');setConfig(c);setModel(c.model);if(!c.login_required){const [r,p]=await Promise.all([api('runs'),api('orders')]);setRuns(r);setRecords(p)}}catch(e){setError(e.message)}}
   useEffect(()=>{refresh()},[]);

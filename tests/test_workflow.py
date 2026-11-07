@@ -55,6 +55,11 @@ def test_tolerance_boundary(delta, expected):
     assert validate(inv, [])[0] == expected
 
 
+def test_tolerance_never_overrides_unclear_extraction():
+    inv = fixture('06_tolerance').model_copy(update={'quality': 'uncertain', 'uncertainties': ['Printed total is blurry']})
+    assert validate(inv, [])[0] == 'needs-review'
+
+
 def test_failure_and_invalid_pdf(tmp_path):
     result = process(b"not PDF", "bad.pdf", tmp_path / "h.db", "", "test")
     assert result["decision"] == "needs-review"

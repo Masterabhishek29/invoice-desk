@@ -6,7 +6,7 @@ Free Render erases local files on restart and sleeps after inactivity. Therefore
 
 1. Create a Neon Free project. Copy its SSL connection string into Render's secret `DATABASE_URL` (never GitHub).
 2. Create a Render Free Docker web service using `Dockerfile.render` in this repository. `render.yaml` records the configuration.
-3. Configure secret `GEMINI_API_KEY` and a demo `APP_PASSWORD`; `GEMINI_MODEL=gemini-3.8-flash`. `LOCAL_SETUP=0`, `COOKIE_SECURE=1`.
+3. Configure secret `GEMINI_API_KEY`; `GEMINI_MODEL=gemini-3.5-flash-lite`. `LOCAL_SETUP=0`, `COOKIE_SECURE=1`. Optional `APP_PASSWORD` protects the shared workspace; the current public interview demo has it disabled by the owner's request.
 4. The allowed browser origin defaults to Render's `RENDER_EXTERNAL_URL`. For a custom domain, set `APP_ORIGIN` to its exact HTTPS origin.
 5. Open the HTTPS URL, sign in with the demo password, run success/edge cases, restart and confirm the stored decisions and PO balances survive.
 
@@ -22,6 +22,6 @@ Database connection failures return HTTP 503 with a fixed, credential-free code.
 
 For `database_unavailable`, inspect the private provider logs and verify the project/endpoint is active and reachable. Do not fall back to local SQLite on ephemeral cloud storage. Once readiness succeeds, verify `/api/runs` and `/api/orders`, a real invoice, an edge case, and history after a restart. A successful readiness check does not verify Gemini extraction or persistent balances by itself.
 
-Before submission, resolve the currently failing Gemini extraction and verify real invoices end to end. The public source repository and a deployed UI are not by themselves evidence that invoice extraction works.
+Before submission, verify real invoices end to end and check the current results in TEST-STATUS.md. The public source repository and a deployed UI are not by themselves evidence that invoice extraction works. Services created from a public Git URL require a manual deploy after source updates, even if the returned service record says autoDeploy=yes; connected-Git-provider services can deploy automatically. Verify the exact live commit.
 
 Official pricing/limitations checked November 7, 2026: https://render.com/docs/free and https://neon.com/pricing.

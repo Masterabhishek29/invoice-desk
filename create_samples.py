@@ -9,8 +9,8 @@ from PIL import Image, ImageDraw, ImageFilter
 ROOT = Path(__file__).parent
 
 
-def create():
-    out = ROOT / "samples"
+def create(output_dir=None, invoice_suffix="", only=None):
+    out = Path(output_dir) if output_dir else ROOT / "samples"
     out.mkdir(exist_ok=True)
     cases = [
         ("01_success", "NS-001", "Northstar Office Supplies", "PO-1001", "500.00", "50.00", "550.00"),
@@ -21,6 +21,9 @@ def create():
         ("07_clear_scan", "NS-004", "Northstar Office Supplies", "PO-1001", "100.00", "10.00", "110.00"),
     ]
     for name, number, vendor, po, subtotal, tax, total in cases:
+        if only and name not in only:
+            continue
+        number += invoice_suffix
         fields = dict(vendor_name=vendor, invoice_number=number, invoice_date="2026-11-01", po_reference=po, currency="USD", subtotal=subtotal, tax=tax, total=total)
         fixture = dict(**fields, quality="clear", uncertainties=[], evidence={k: f"Page 1: {v}" for k, v in fields.items()}, line_items=[dict(description="Office supplies" if vendor.startswith("Northstar") else "IT support services", quantity="1", unit_price=subtotal, amount=subtotal, evidence=f"Page 1: 1 x {subtotal} = {subtotal}")])
         pdf = canvas.Canvas(str(out / f"{name}.pdf"), pagesize=(595, 842))
@@ -47,8 +50,15 @@ def create():
                 pdf.drawString(44, 725-n*36, text)
         pdf.save()
         (out / f"{name}.expected.json").write_text(json.dumps(fixture, indent=2), encoding="utf-8")
-    shutil.copyfile(out / "01_success.pdf", out / "02_duplicate_renamed.pdf")
+    if not only or "01_success" in only:
+        shutil.copyfile(out / "01_success.pdf", out / "02_duplicate_renamed.pdf")
 
 
 if __name__ == "__main__":
-    create()
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output')
+    parser.add_argument('--invoice-suffix', default='')
+    parser.add_argument('--only', nargs='+')
+    args = parser.parse_args()
+    create(args.output, args.invoice_suffix, args.only)

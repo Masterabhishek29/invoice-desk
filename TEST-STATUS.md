@@ -1,14 +1,23 @@
-# Verification status
+# Verification status - November 7, 2026
 
-- Root cause confirmed from current Render logs: PgBouncer rejected the driver's startup `statement_timeout` option. Removed that startup option and apply the timeout per transaction with `SET LOCAL`. Added a pooled-connection regression test; 22 Python tests pass. Live deployment verification follows this change.
-- November 7 deployment diagnostics update: 21 Python tests pass. Added database readiness (`/api/ready`), sanitized HTTP 503 responses for Postgres connection failures, and tests that credentials never appear in those responses. These tests simulate provider failures; they do not establish a repaired Neon connection. The last live checks returned 500 for history and purchase orders before this update. Live readiness, Gemini success, and restart persistence remain pending.
-- Sixteen Python tests passed, including duplicate detection, cumulative and line limits, ambiguity, concurrency, API streaming, key isolation, origin and password protection. HTTP processing tests use explicit extraction fixtures.
-- Next.js 16.4.5 production build passed. Browser verified dashboard, connection settings, multiple-line PO register and workspace. Full browser upload/extraction success is not yet verified. Streamlit UI has been removed.
-- Clean invoice, clear image-only scan and unclear image-only scan were rendered and visually inspected.
-- The configured API key successfully listed models; gemini-3.8-flash was present.
-- Actual live PDF extraction returned HTTP 503 UNAVAILABLE from gemini-3.8-flash. A further bounded attempt also failed with ServerError. The application recorded needs-review and reserved no balance. A successful live extraction and the live scenario suite remain unverified; fixture tests do not establish model accuracy.
-- Public deployment and restart persistence have not yet been verified.
+## Passed
 
-The key is in an ignored local .env file. Do not include it in archives, commits, recordings or deployment images.
+- 23 Python tests: monetary policy, duplicates, cumulative and PO-line limits, concurrent reservations, uncertain extraction, streaming API, key isolation, origin/password checks, credential-safe storage errors, readiness, and pooled Postgres compatibility. Automated extraction tests explicitly use fixtures, not Gemini.
+- Actual public deployment: database readiness, history and PO endpoints return HTTP 200. Fixed the Neon pooler rejecting a startup timeout by using a transaction-local timeout. Existing database credentials were retained.
+- Real deployed Gemini 3.5 Flash-Lite extraction and Python validation: a digital USD 550 invoice approved; the identical renamed PDF rejected with extraction skipped; USD 600 approved against PO-2001; a following USD 400 rejected against its USD 300 remainder; unclear image-only scan routed to review; clear image-only scan approved.
+- A real local extraction using the revised readability-only prompt approved a clearly printed one-cent discrepancy within the USD 0.02 tolerance. Genuinely unclear extraction remains reviewable regardless of arithmetic tolerance.
+- The earlier Next.js production build passed. Prior browser checks covered dashboard, settings, PO register and workspace. Current live scenario verification uses the deployed HTTP API; a fresh full browser recording remains the owner's next step.
+- Publication files and fetched Git history were scanned for the known private Gemini key/demo password and credential patterns; no matches were found. Secrets remain excluded from source and archives.
 
-Latest check: restarted local services; frontend and proxied API return HTTP 200. Fixed a proxy idle timeout using stream heartbeats and a 120-second proxy timeout. A real synthetic PDF now completes the full HTTP workflow and records needs-review, because Gemini still returns ServerError. No invoice fields or successful approval were returned. All 16 tests pass after the fix.
+## Pending final release checks
+
+- Deploy the updated extraction prompt and verify the fresh tolerance PDF against the deployed model.
+- Replace the running Render instance and verify run IDs and PO balances survive unchanged.
+
+## Measured limitations
+
+Gemini 3.8 Flash repeatedly returned provider ServerError responses from the deployed host, despite one successful local extraction. Gemini 3.5 Flash-Lite succeeded in the deployed workflow and is now the configurable default. No automatic model fallback is used.
+
+An earlier tolerance run was sent to review because the model treated an arithmetic discrepancy as extraction uncertainty. The revised prompt separates legibility from accounting checks; Python retains model-reported readability uncertainty and enforces tolerance itself. Earlier failed/review runs remain in the audit history, not erased or relabeled.
+
+The public demo deliberately has no workspace password; use synthetic data. Visitors can consume the privately configured server key's quota. Remove that Gemini key after recording if reviewers should supply their own. Do not expose Render environment values or Neon connection strings in a recording. A code scan is not a full penetration test.

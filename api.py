@@ -88,12 +88,12 @@ def login(body: Login, request: Request, response: Response):
 @app.get('/api/config')
 def config(request: Request, response: Response):
     state = session(request, response)
-    return {'configured': bool(state.get('key') or os.getenv('GEMINI_API_KEY')), 'key_source': 'Your session' if state.get('key') else 'Server configuration', 'model': state.get('model', os.getenv('GEMINI_MODEL', 'gemini-3.8-flash')), 'local_save': os.getenv('LOCAL_SETUP') == '1', 'login_required': bool(os.getenv('APP_PASSWORD')) and not state.get('authenticated'), 'policy': RULE_VERSION}
+    return {'configured': bool(state.get('key') or os.getenv('GEMINI_API_KEY')), 'key_source': 'Your session' if state.get('key') else 'Server configuration', 'model': state.get('model', os.getenv('GEMINI_MODEL', 'gemini-3.5-flash-lite')), 'local_save': os.getenv('LOCAL_SETUP') == '1', 'login_required': bool(os.getenv('APP_PASSWORD')) and not state.get('authenticated'), 'policy': RULE_VERSION}
 
 
 class Connection(BaseModel):
     key: str = ''
-    model: str = 'gemini-3.8-flash'
+    model: str = 'gemini-3.5-flash-lite'
     persist: bool = False
     reset: bool = False
 
@@ -145,7 +145,7 @@ async def process_invoice(request: Request, response: Response, file: UploadFile
     await file.close()
     if len(data) > 10 * 1024 * 1024:
         raise HTTPException(413, 'PDF must be no larger than 10 MB')
-    model = state.get('model', os.getenv('GEMINI_MODEL', 'gemini-3.8-flash'))
+    model = state.get('model', os.getenv('GEMINI_MODEL', 'gemini-3.5-flash-lite'))
     queue = Queue()
     def worker():
         try:
